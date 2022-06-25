@@ -16,12 +16,15 @@ def is_verb(word):
     pos_info = pos_tag([word])
     return pos_info[0][1] == 'VB'
 
-Path = ''
+Path = ''  # Это зачем тут?
 
 def get_trees(_path, with_filenames=False, with_file_content=False):
+    """"
+    штука которая создает дерево
+    """
     filenames = []
     trees = []
-    path= Path
+    path = Path
     for dirname, dirs, files in os.walk(path, topdown=True):
         for file in files:
             if file.endswith('.py'):
