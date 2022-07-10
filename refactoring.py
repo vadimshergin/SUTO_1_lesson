@@ -33,7 +33,7 @@ def create_filenames_list(func_path=Path):
     return filenames_list
 
 
-def get_trees(_path, with_filenames=False, with_file_content=False):
+def get_trees(with_filenames=False, with_file_content=False):
     """"
     штука которая создает дерево
     """
