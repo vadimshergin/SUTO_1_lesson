@@ -22,12 +22,11 @@ Path = ''  # Это зачем тут?
 
 
 def create_filenames_list(func_path=Path):
-    path = func_path
     filenames_list = []
-    for dirname, dirs, files in os.walk(path, topdown=True):
+    for dirname, dirs, files in os.walk(func_path, topdown=True):
         for file in files:
             if file.endswith('.py'):
-                filenames_list.append(os.path.join(dirname, file))
+                filenames_list.append(os.func_path.join(dirname, file))
                 if len(filenames_list) == 100:
                     break
     print('total %s files' % len(filenames_list))
@@ -40,14 +39,6 @@ def get_trees(_path, with_filenames=False, with_file_content=False):
     """
     filenames = create_filenames_list()
     trees = []
-    # path = Path
-    # for dirname, dirs, files in os.walk(path, topdown=True):
-    #     for file in files:
-    #         if file.endswith('.py'):
-    #             filenames.append(os.path.join(dirname, file))
-    #             if len(filenames) == 100:
-    #                 break
-    # print('total %s files' % len(filenames))
     for filename in filenames:
         with open(filename, 'r', encoding='utf-8') as attempt_handler:
             main_file_content = attempt_handler.read()
