@@ -5,6 +5,9 @@ import collections
 from nltk import pos_tag
 
 
+Path = ''  # Это зачем тут?
+
+
 def flat(_list):
     """ [(1,2), (3,4)] -> [1, 2, 3, 4]"""
     return sum([list(item) for item in _list], [])
@@ -16,9 +19,6 @@ def is_verb(word):
         return False
     pos_info = pos_tag([word])
     return pos_info[0][1] == 'VB'
-
-
-Path = ''  # Это зачем тут?
 
 
 def create_filenames_list(func_path=Path):
@@ -86,8 +86,8 @@ def get_top_verbs_in_path(path, top_size=10):
     return collections.Counter(verbs).most_common(top_size)
 
 
-def get_top_functions_names_in_path(path, top_size=10):
-    t = get_trees(path)
+def get_top_functions_names_in_path(top_size=10):
+    t = get_trees()
     nms = [f for f in flat([[node.name.lower() for node in ast.walk(t) if isinstance(node, ast.FunctionDef)] for t in t]) if not (f.startswith('__') and f.endswith('__'))]
     return collections.Counter(nms).most_common(top_size)
 
