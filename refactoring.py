@@ -77,12 +77,12 @@ def get_all_words_in_path(path):
 
 
 def get_top_verbs_in_path(path, top_size=10):
-    global Path
-    Path = path
-    trees = [t for t in get_trees(None) if t]
-    fncs = [f for f in flat([[node.name.lower() for node in ast.walk(t) if isinstance(node, ast.FunctionDef)] for t in trees]) if not (f.startswith('__') and f.endswith('__'))]
+    # global Path
+    # Path = path
+    trees = [t for t in get_trees() if t]
+    functions_list = [f for f in flat([[node.name.lower() for node in ast.walk(t) if isinstance(node, ast.FunctionDef)] for t in trees]) if not (f.startswith('__') and f.endswith('__'))]
     print('functions extracted')
-    verbs = flat([get_verbs_from_function_name(function_name) for function_name in fncs])
+    verbs = flat([get_verbs_from_function_name(function_name) for function_name in functions_list])
     return collections.Counter(verbs).most_common(top_size)
 
 
