@@ -66,11 +66,13 @@ def get_verbs_from_function_name(function_name):
     return [word for word in function_name.split('_') if is_verb(word)]
 
 
+def split_snake_case_name_to_words(name):
+    return [n for n in name.split('_') if n]
+
+
 def get_all_words_in_path(path):
     trees = [t for t in get_trees(path) if t]
     function_names = [f for f in flat([get_all_names(t) for t in trees]) if not (f.startswith('__') and f.endswith('__'))]
-    def split_snake_case_name_to_words(name):
-        return [n for n in name.split('_') if n]
     return flat([split_snake_case_name_to_words(function_name) for function_name in function_names])
 
 
