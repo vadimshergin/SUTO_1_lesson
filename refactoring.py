@@ -11,27 +11,43 @@ def flat(_list):
 
 
 def is_verb(word):
+    """" Check if a word is verb """
     if not word:
         return False
     pos_info = pos_tag([word])
     return pos_info[0][1] == 'VB'
 
+
 Path = ''  # Это зачем тут?
+
+
+def create_filenames_list(func_path=Path):
+    path = func_path
+    filenames_list = []
+    for dirname, dirs, files in os.walk(path, topdown=True):
+        for file in files:
+            if file.endswith('.py'):
+                filenames_list.append(os.path.join(dirname, file))
+                if len(filenames_list) == 100:
+                    break
+    print('total %s files' % len(filenames_list))
+    return filenames_list
+
 
 def get_trees(_path, with_filenames=False, with_file_content=False):
     """"
     штука которая создает дерево
     """
-    filenames = []
+    filenames = create_filenames_list()
     trees = []
-    path = Path
-    for dirname, dirs, files in os.walk(path, topdown=True):
-        for file in files:
-            if file.endswith('.py'):
-                filenames.append(os.path.join(dirname, file))
-                if len(filenames) == 100:
-                    break
-    print('total %s files' % len(filenames))
+    # path = Path
+    # for dirname, dirs, files in os.walk(path, topdown=True):
+    #     for file in files:
+    #         if file.endswith('.py'):
+    #             filenames.append(os.path.join(dirname, file))
+    #             if len(filenames) == 100:
+    #                 break
+    # print('total %s files' % len(filenames))
     for filename in filenames:
         with open(filename, 'r', encoding='utf-8') as attempt_handler:
             main_file_content = attempt_handler.read()
@@ -75,6 +91,8 @@ def get_top_verbs_in_path(path, top_size=10):
     print('functions extracted')
     verbs = flat([get_verbs_from_function_name(function_name) for function_name in fncs])
     return collections.Counter(verbs).most_common(top_size)
+
+
 def get_top_functions_names_in_path(path, top_size=10):
     t = get_trees(path)
     nms = [f for f in flat([[node.name.lower() for node in ast.walk(t) if isinstance(node, ast.FunctionDef)] for t in t]) if not (f.startswith('__') and f.endswith('__'))]
