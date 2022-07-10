@@ -5,7 +5,7 @@ import collections
 from nltk import pos_tag
 
 
-Path = ''  # Это зачем тут?
+#Path = ''  # Это зачем тут?
 
 
 def flat(_list):
@@ -21,9 +21,9 @@ def is_verb(word):
     return pos_info[0][1] == 'VB'
 
 
-def create_filenames_list(func_path=Path):
+def create_filenames_list(path_to):
     filenames_list = []
-    for dirname, dirs, files in os.walk(func_path, topdown=True):
+    for dirname, dirs, files in os.walk(path_to, topdown=True):
         for file in files:
             if file.endswith('.py'):
                 filenames_list.append(os.func_path.join(dirname, file))
@@ -33,11 +33,11 @@ def create_filenames_list(func_path=Path):
     return filenames_list
 
 
-def get_trees(with_filenames=False, with_file_content=False):
+def get_trees(path_to, with_filenames=False, with_file_content=False):
     """"
     штука которая создает дерево
     """
-    filenames = create_filenames_list()
+    filenames = create_filenames_list(path_to)
     trees = []
     for filename in filenames:
         with open(filename, 'r', encoding='utf-8') as attempt_handler:
@@ -70,24 +70,24 @@ def split_snake_case_name_to_words(name):
     return [n for n in name.split('_') if n]
 
 
-def get_all_words_in_path(path):
-    trees = [t for t in get_trees(path) if t]
+def get_all_words_in_path(path_to):
+    trees = [t for t in get_trees(path_to) if t]
     function_names = [f for f in flat([get_all_names(t) for t in trees]) if not (f.startswith('__') and f.endswith('__'))]
     return flat([split_snake_case_name_to_words(function_name) for function_name in function_names])
 
 
-def get_top_verbs_in_path(path, top_size=10):
+def get_top_verbs_in_path(path_to, top_size=10):
     # global Path
     # Path = path
-    trees = [t for t in get_trees() if t]
+    trees = [t for t in get_trees(path_to) if t]
     functions_list = [f for f in flat([[node.name.lower() for node in ast.walk(t) if isinstance(node, ast.FunctionDef)] for t in trees]) if not (f.startswith('__') and f.endswith('__'))]
     print('functions extracted')
     verbs = flat([get_verbs_from_function_name(function_name) for function_name in functions_list])
     return collections.Counter(verbs).most_common(top_size)
 
 
-def get_top_functions_names_in_path(top_size=10):
-    t = get_trees()
+def get_top_functions_names_in_path(path_to, top_size=10):
+    t = get_trees(path_to)
     nms = [f for f in flat([[node.name.lower() for node in ast.walk(t) if isinstance(node, ast.FunctionDef)] for t in t]) if not (f.startswith('__') and f.endswith('__'))]
     return collections.Counter(nms).most_common(top_size)
 
