@@ -25,7 +25,7 @@ def create_filenames_list(path_to):
     """" Create list of files placed in certain directories """
     filenames_list = []
     for dirname, dirs, files in os.walk(path_to, topdown=True):
-        if len(filenames_list) <= 10:
+        if len(filenames_list) <= 100:
             for file in files:
                 if file.endswith('.py'):
                     filenames_list.append(os.path.join(dirname, file))
@@ -102,6 +102,7 @@ for project in projects:
     wds += get_top_verbs_in_path(path)
 
 top_size = 200
+print('#-#-#- RESULT -#-#-#')
 print('total %s words, %s unique' % (len(wds), len(set(wds))))
 for word, occurence in collections.Counter(wds).most_common(top_size):
-    print(word, occurence)
+    print(f'Word "{word[0]}" has been found {word[1]} times')
