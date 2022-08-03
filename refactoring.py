@@ -22,13 +22,15 @@ def is_verb(word):
 
 
 def create_filenames_list(path_to):
+    """" Create list of files placed in certain directories """
     filenames_list = []
     for dirname, dirs, files in os.walk(path_to, topdown=True):
-        for file in files:
-            if file.endswith('.py'):
-                filenames_list.append(os.path.join(dirname, file))
-                if len(filenames_list) == 100:
-                    break
+        if len(filenames_list) <= 10:
+            for file in files:
+                if file.endswith('.py'):
+                    filenames_list.append(os.path.join(dirname, file))
+        else:
+            break
     print('total %s files' % len(filenames_list))
     return filenames_list
 
@@ -93,18 +95,10 @@ def get_top_functions_names_in_path(path_to, top_size=10):
 
 
 wds = []
-projects = [
-    'django',
-    'flask',
-    'pyramid',
-    'reddit',
-    'requests',
-    'sqlalchemy',
-    'SUTO_1_lesson'
-]
+projects = ['SUTO_1_lesson']
+
 for project in projects:
     path = os.path.join('.', project)
-    print(path)
     wds += get_top_verbs_in_path(path)
 
 top_size = 200
