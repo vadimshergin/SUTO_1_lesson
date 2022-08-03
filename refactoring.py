@@ -26,7 +26,7 @@ def create_filenames_list(path_to):
     for dirname, dirs, files in os.walk(path_to, topdown=True):
         for file in files:
             if file.endswith('.py'):
-                filenames_list.append(os.func_path.join(dirname, file))
+                filenames_list.append(os.path.join(dirname, file))
                 if len(filenames_list) == 100:
                     break
     print('total %s files' % len(filenames_list))
@@ -100,9 +100,11 @@ projects = [
     'reddit',
     'requests',
     'sqlalchemy',
+    'SUTO_1_lesson'
 ]
 for project in projects:
     path = os.path.join('.', project)
+    print(path)
     wds += get_top_verbs_in_path(path)
 
 top_size = 200
