@@ -13,7 +13,6 @@ from nltk import pos_tag
 
 
 class Downloader:
-
     """ Copy GitHab repo by user link  """
 
     def make_repo_clone(self, git_url):
@@ -22,14 +21,14 @@ class Downloader:
 
 
 class UserInput:
-
     """ Parsing arguments and saving data into class variables """
 
     user_input = []
 
     def argument_parser(self):
         parser = argparse.ArgumentParser(description='Collecting report parameters')
-        parser.add_argument('word_type', type=str, help='VB - verb, CC - conjunction, IN - preposition, NN - a noun, JJ - adjective, RB - adverbs')
+        parser.add_argument('word_type', type=str,
+                            help='VB - verb, CC - conjunction, IN - preposition, NN - a noun, JJ - adjective, RB - adverbs, ANY - any words')
         parser.add_argument('searching_level', type=str, help='Use NAMES or INSIDE')
         parser.add_argument('report_type', type=str, help='Input CONS or FILE.CSV or FILE.JSON')
         parser.add_argument('dir_name', type=str, help='Input directory name or link to repo')
@@ -50,12 +49,7 @@ class UserInput:
 
 
 class TreeMaker:
-
     """ creating a data tree and divides the tree into words """
-
-    def flat(self, _list):
-        """ [(1,2), (3,4)] -> [1, 2, 3, 4]"""
-        return sum([list(item) for item in _list], [])
 
     def create_filenames_list(self, path_to):
         """" Create list of files placed in certain directories """
@@ -92,22 +86,13 @@ class TreeMaker:
         print('trees generated')
         return trees
 
-    def split_snake_case_name_to_words(self, name):
-        return [n for n in name.split('_') if n]
-
-    def get_all_names(self, tree):
-        return [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
-
-    def get_all_words_in_path(self, path_to):
-        trees = [t for t in self.get_trees(path_to) if t]
-        function_names = [f for f in self.flat([self.get_all_names(t) for t in trees]) if
-                          not (f.startswith('__') and f.endswith('__'))]
-        return self.flat([self.split_snake_case_name_to_words(function_name) for function_name in function_names])
-
 
 class WordCounter(TreeMaker):
-
     """ Counting words """
+
+    def flat(self, _list):
+        """ [(1,2), (3,4)] -> [1, 2, 3, 4]"""
+        return sum([list(item) for item in _list], [])
 
     def find_type(self, word, word_type):
         """ word_type: VB - verb, CC - conjunction, IN - preposition, NN - a noun, JJ - adjective, RB - adverbs """
@@ -116,30 +101,48 @@ class WordCounter(TreeMaker):
         pos_info = pos_tag([word])
         return pos_info[0][1] == word_type
 
+    def split_snake_case_name_to_words(self, name):
+        return [n for n in name.split('_') if n]
+
+    def get_all_names(self, tree):
+        return [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
+
+    def get_all_words(self, path_to):
+        trees = [t for t in self.get_trees(path_to) if t]
+        function_names = [f for f in self.flat([self.get_all_names(t) for t in trees]) if
+                          not (f.startswith('__') and f.endswith('__'))]
+        return self.flat([self.split_snake_case_name_to_words(function_name) for function_name in function_names])
+
     def get_words_from_function_name(self, function_name, word_type):
         return [word for word in function_name.split('_') if self.find_type(word, word_type)]
 
-    def get_top_words_in_path(self, path_to, word_type, top_size=10):
+    def get_top_words_in_path(self, path_to, word_type, top_size=10, returning=False):
         """ Return top words from functions names """
         trees = [t for t in super().get_trees(path_to) if t]
-        functions_list = [f for f in super().flat(
+        functions_list = [f for f in self.flat(
             [[node.name.lower() for node in ast.walk(t) if isinstance(node, ast.FunctionDef)] for t in trees]) if
                           not (f.startswith('__') and f.endswith('__'))]
         print('functions extracted')
-        words = super().flat([self.get_words_from_function_name(function_name, word_type) for function_name in functions_list])
+        words = self.flat(
+            [self.get_words_from_function_name(function_name, word_type) for function_name in functions_list])
+        if returning:
+            return words
         return collections.Counter(words).most_common(top_size)
 
-    def get_top_functions_names_in_path(self, path_to, top_size=10):
-        """ Return top functions NAMES """
-        t = super().get_trees(path_to)
-        nms = [f for f in
-               super().flat([[node.name.lower() for node in ast.walk(t) if isinstance(node, ast.FunctionDef)] for t in t]) if
-               not (f.startswith('__') and f.endswith('__'))]
-        return collections.Counter(nms).most_common(top_size)
+    def get_top_variables_names(self, path_to, word_type):
+        all_words = self.get_all_words(path_to)
+        words_in_function_names = self.get_top_words_in_path(path_to, word_type)
+
+    # def get_top_functions_names_in_path(self, path_to, top_size=10):
+    #     """ Return top functions NAMES """
+    #     t = super().get_trees(path_to)
+    #     nms = [f for f in
+    #            super().flat([[node.name.lower() for node in ast.walk(t) if isinstance(node, ast.FunctionDef)] for t in t]) if
+    #            not (f.startswith('__') and f.endswith('__'))]
+    #     return collections.Counter(nms).most_common(top_size)
 
 
 class Writer:
-
     """ Creates a report """
 
     def report_to_console(self, word_counter_inst):
@@ -174,7 +177,6 @@ class Writer:
 
 
 if __name__ == '__main__':
-
     downloader = Downloader()
     user_data = UserInput()
     tree_maker = TreeMaker()
@@ -192,15 +194,11 @@ if __name__ == '__main__':
 
     path = os.path.join('.', user_data_list['dir_name'])
 
-    if user_data_list['searching_level'] == 'INSIDE':
-        if user_data_list['report_type'] == 'CONS':
-            writer.report_to_console(word_counter.get_top_words_in_path(path, user_data_list['word_type']))
-        else:
-            writer.save_report_in_file(user_data_list['report_type'], word_counter.get_top_words_in_path(path, user_data_list['word_type']))
-
-
-
-
+    # if user_data_list['searching_level'] == 'INSIDE':
+    #     if user_data_list['report_type'] == 'CONS':
+    #         writer.report_to_console(word_counter.get_top_words_in_path(path, user_data_list['word_type']))
+    #     else:
+    #         writer.save_report_in_file(user_data_list['report_type'], word_counter.get_top_words_in_path(path, user_data_list['word_type']))
 
 # wds = []
 # projects = ['SUTO_1_lesson']
