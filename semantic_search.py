@@ -8,7 +8,6 @@ import csv
 
 from nltk import pos_tag
 
-#TODO * выдавать статистику самых частых слов названия функций или локальных переменных внутри функций (в зависимости от параметра отчёта);
 #TODO * клонировать репозитории с Гитхаба;
 
 
@@ -129,17 +128,19 @@ class WordCounter(TreeMaker):
             return words
         return collections.Counter(words).most_common(top_size)
 
-    def get_top_variables_names(self, path_to, word_type):
+    def get_top_variables_names(self, path_to, word_type, top_size=10):
         all_words = self.get_all_words(path_to)
-        words_in_function_names = self.get_top_words_in_path(path_to, word_type)
+        words_in_function_names = self.get_top_words_in_path(path_to, word_type, returning=True)
+        for word in words_in_function_names:
+            try:
+                all_words.remove(word)
+            except ValueError:
+                continue
+        return collections.Counter(all_words).most_common(top_size)
 
-    # def get_top_functions_names_in_path(self, path_to, top_size=10):
-    #     """ Return top functions NAMES """
-    #     t = super().get_trees(path_to)
-    #     nms = [f for f in
-    #            super().flat([[node.name.lower() for node in ast.walk(t) if isinstance(node, ast.FunctionDef)] for t in t]) if
-    #            not (f.startswith('__') and f.endswith('__'))]
-    #     return collections.Counter(nms).most_common(top_size)
+    def get_top_any(self, path_to, top_size=10):
+        all_words = self.get_all_words(path_to)
+        return collections.Counter(all_words).most_common(top_size)
 
 
 class Writer:
@@ -194,11 +195,11 @@ if __name__ == '__main__':
 
     path = os.path.join('.', user_data_list['dir_name'])
 
-    # if user_data_list['searching_level'] == 'INSIDE':
-    #     if user_data_list['report_type'] == 'CONS':
-    #         writer.report_to_console(word_counter.get_top_words_in_path(path, user_data_list['word_type']))
-    #     else:
-    #         writer.save_report_in_file(user_data_list['report_type'], word_counter.get_top_words_in_path(path, user_data_list['word_type']))
+    if user_data_list['searching_level'] == 'INSIDE':
+        if user_data_list['report_type'] == 'CONS':
+            writer.report_to_console(word_counter.get_top_variables_names(path, user_data_list['word_type']))
+        else:
+            writer.save_report_in_file(user_data_list['report_type'], word_counter.get_top_variables_names(path, user_data_list['word_type']))
 
 # wds = []
 # projects = ['SUTO_1_lesson']
