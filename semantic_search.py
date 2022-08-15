@@ -2,7 +2,7 @@ import ast
 import os
 import collections
 import argparse
-from git import Repo
+import git
 import json
 import csv
 
@@ -15,8 +15,10 @@ class Downloader:
     """ Copy GitHab repo by user link  """
 
     def make_repo_clone(self, git_url):
-        repo_dir = os.getcwd()
-        Repo.clone_from(git_url, repo_dir)
+        repo_dir = git_url.split('/')[-1]
+        if not os.path.exists(f'./{repo_dir}'):
+            new_repo = git.Repo.clone_from(git_url, repo_dir)
+        return repo_dir
 
 
 class UserInput:
@@ -193,23 +195,24 @@ if __name__ == '__main__':
         'dir_name': user_data.where_to_search()
     }
 
+    if user_data_list['dir_name'].startswith('http'):
+        user_data_list.update({'dir_name': downloader.make_repo_clone(user_data_list['dir_name'])})
+
     path = os.path.join('.', user_data_list['dir_name'])
 
-    if user_data_list['searching_level'] == 'INSIDE':
+    if user_data_list['word_type'] == 'ANY':
+        if user_data_list['report_type'] == 'CONS':
+            writer.report_to_console(word_counter.get_top_any(path))
+        else:
+            writer.save_report_in_file(user_data_list['report_type'], word_counter.get_top_any(path))
+    elif user_data_list['searching_level'] == 'INSIDE':
         if user_data_list['report_type'] == 'CONS':
             writer.report_to_console(word_counter.get_top_variables_names(path, user_data_list['word_type']))
         else:
             writer.save_report_in_file(user_data_list['report_type'], word_counter.get_top_variables_names(path, user_data_list['word_type']))
+    else:
+        if user_data_list['report_type'] == 'CONS':
+            writer.report_to_console(word_counter.get_top_words_in_path(path, user_data_list['word_type']))
+        else:
+            writer.save_report_in_file(user_data_list['report_type'], word_counter.get_top_words_in_path(path, user_data_list['word_type']))
 
-# wds = []
-# projects = ['SUTO_1_lesson']
-#
-# for project in projects:
-#     path = os.path.join('.', project)
-#     wds += get_top_verbs_in_path(path)
-#
-# top_size = 200
-# print('#-#-#- RESULT -#-#-#')
-# print('total %s words, %s unique' % (len(wds), len(set(wds))))
-# for word, occurence in collections.Counter(wds).most_common(top_size):
-#     print(f'Word "{word[0]}" has been found {word[1]} times')
