@@ -8,8 +8,6 @@ import csv
 
 from nltk import pos_tag
 
-#TODO * клонировать репозитории с Гитхаба;
-
 
 class Downloader:
 
@@ -26,16 +24,22 @@ class Downloader:
 
 
 class UserInput:
+
     """ Parsing arguments and saving data into class variables """
 
     def __init__(self):
         self.user_input = []
 
     def argument_parser(self):
-        parser = argparse.ArgumentParser(description='Collecting report parameters')
-        parser.add_argument('word_type', type=str, help='VB - verb, CC - conjunction, IN - preposition, NN - a noun, JJ - adjective, RB - adverbs, ANY - any words')
-        parser.add_argument('searching_level', type=str, help='Use NAMES or INSIDE')
-        parser.add_argument('report_type', type=str, help='Input CONS or FILE.CSV or FILE.JSON')
+        parser = argparse.ArgumentParser(description='The module creates a report of a static search for top words used '
+                                                     'in python files in a chosen directory')
+        parser.add_argument('word_type', type=str,
+                            help='VB - verb, CC - conjunction, IN - preposition, NN - a noun, JJ - adjective, '
+                                 'RB - adverbs, ANY - any words')
+        parser.add_argument('searching_level', type=str,
+                            help='Use NAMES for searching in functions names or INSIDE for search through variables')
+        parser.add_argument('report_type', type=str,
+                            help='Input CONS for print out to terminal, FILE.CSV or FILE.JSON for saving in file')
         parser.add_argument('dir_name', type=str, help='Input directory name or link to repo')
         args = parser.parse_args()
         self.user_input = [args.word_type, args.searching_level, args.report_type, args.dir_name]
@@ -54,6 +58,7 @@ class UserInput:
 
 
 class TreeMaker:
+
     """ creating a data tree and divides the tree into words """
 
     def create_filenames_list(self, path_to):
@@ -100,7 +105,7 @@ class WordCounter(TreeMaker):
         return sum([list(item) for item in _list], [])
 
     def find_type(self, word, word_type):
-        """ word_type: VB - verb, CC - conjunction, IN - preposition, NN - a noun, JJ - adjective, RB - adverbs """
+        """ word_type: VB - verb, CC - conjunction, IN - preposition, NN - a noun, JJ - adjective, RB - adverbs, ANY """
         if not word:
             return False
         pos_info = pos_tag([word])
@@ -113,9 +118,7 @@ class WordCounter(TreeMaker):
         return [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
 
     def get_all_words(self, path_to):
-
         """" Return cleared list of words WITHOUT type definition """
-
         trees = [t for t in self.get_trees(path_to) if t]
         function_names = [f for f in self.flat([self.get_all_names(t) for t in trees]) if
                           not (f.startswith('__') and f.endswith('__'))]
@@ -138,6 +141,7 @@ class WordCounter(TreeMaker):
         return collections.Counter(words).most_common(top_size)
 
     def get_top_variables_names(self, path_to, word_type, top_size=10):
+        """ Return top words from variables names """
         all_words = self.get_all_words(path_to)
         words_in_function_names = self.get_top_words_in_path(path_to, word_type, returning=True)
         cleared_words = [word for word in all_words if self.find_type(word, word_type)]
@@ -149,11 +153,13 @@ class WordCounter(TreeMaker):
         return collections.Counter(cleared_words).most_common(top_size)
 
     def get_top_any(self, path_to, top_size=10):
+        """ Return top words without type definition """
         all_words = self.get_all_words(path_to)
         return collections.Counter(all_words).most_common(top_size)
 
 
 class Writer:
+
     """ Creates a report """
 
     def report_to_console(self, word_counter_inst):
