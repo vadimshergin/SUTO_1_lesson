@@ -12,7 +12,11 @@ from nltk import pos_tag
 
 
 class Downloader:
+
     """ Copy GitHab repo by user link  """
+
+    def __init__(self):
+        pass
 
     def make_repo_clone(self, git_url):
         repo_dir = git_url.split('/')[-1]
@@ -24,29 +28,29 @@ class Downloader:
 class UserInput:
     """ Parsing arguments and saving data into class variables """
 
-    user_input = []
+    def __init__(self):
+        self.user_input = []
 
     def argument_parser(self):
         parser = argparse.ArgumentParser(description='Collecting report parameters')
-        parser.add_argument('word_type', type=str,
-                            help='VB - verb, CC - conjunction, IN - preposition, NN - a noun, JJ - adjective, RB - adverbs, ANY - any words')
+        parser.add_argument('word_type', type=str, help='VB - verb, CC - conjunction, IN - preposition, NN - a noun, JJ - adjective, RB - adverbs, ANY - any words')
         parser.add_argument('searching_level', type=str, help='Use NAMES or INSIDE')
         parser.add_argument('report_type', type=str, help='Input CONS or FILE.CSV or FILE.JSON')
         parser.add_argument('dir_name', type=str, help='Input directory name or link to repo')
         args = parser.parse_args()
-        UserInput.user_input = [args.word_type, args.searching_level, args.report_type, args.dir_name]
+        self.user_input = [args.word_type, args.searching_level, args.report_type, args.dir_name]
 
     def what_we_searching(self):
-        return UserInput.user_input[0]
+        return self.user_input[0]
 
     def names_or_inside(self):
-        return UserInput.user_input[1]
+        return self.user_input[1]
 
     def report_type(self):
-        return UserInput.user_input[2]
+        return self.user_input[2]
 
     def where_to_search(self):
-        return UserInput.user_input[3]
+        return self.user_input[3]
 
 
 class TreeMaker:
@@ -109,6 +113,9 @@ class WordCounter(TreeMaker):
         return [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
 
     def get_all_words(self, path_to):
+
+        """" Return cleared list of words WITHOUT type definition """
+
         trees = [t for t in self.get_trees(path_to) if t]
         function_names = [f for f in self.flat([self.get_all_names(t) for t in trees]) if
                           not (f.startswith('__') and f.endswith('__'))]
@@ -133,12 +140,13 @@ class WordCounter(TreeMaker):
     def get_top_variables_names(self, path_to, word_type, top_size=10):
         all_words = self.get_all_words(path_to)
         words_in_function_names = self.get_top_words_in_path(path_to, word_type, returning=True)
-        for word in words_in_function_names:
+        cleared_words = [word for word in all_words if self.find_type(word, word_type)]
+        for _ in words_in_function_names:
             try:
-                all_words.remove(word)
+                cleared_words.remove(_)
             except ValueError:
                 continue
-        return collections.Counter(all_words).most_common(top_size)
+        return collections.Counter(cleared_words).most_common(top_size)
 
     def get_top_any(self, path_to, top_size=10):
         all_words = self.get_all_words(path_to)
@@ -207,7 +215,7 @@ if __name__ == '__main__':
             writer.save_report_in_file(user_data_list['report_type'], word_counter.get_top_any(path))
     elif user_data_list['searching_level'] == 'INSIDE':
         if user_data_list['report_type'] == 'CONS':
-            writer.report_to_console(word_counter.get_top_variables_names(path, user_data_list['word_type']))
+            writer.report_to_console(word_counter.get_top_words_in_path(path, user_data_list['word_type']))
         else:
             writer.save_report_in_file(user_data_list['report_type'], word_counter.get_top_variables_names(path, user_data_list['word_type']))
     else:
