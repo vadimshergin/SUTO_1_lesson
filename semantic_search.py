@@ -45,13 +45,22 @@ class UserInput:
         self.user_input = [args.word_type, args.searching_level, args.report_type, args.dir_name]
 
     def what_we_searching(self):
-        return self.user_input[0]
+        if self.user_input[0] in ['VB', 'CC', 'IN', 'NN', 'JJ', 'RB', 'ANY']:
+            return self.user_input[0]
+        else:
+            raise ValueError("Please use only: 'VB', 'CC', 'IN', 'NN', 'JJ', 'RB', 'ANY'")
 
     def names_or_inside(self):
-        return self.user_input[1]
+        if self.user_input[1] in ['NAMES', 'INSIDE']:
+            return self.user_input[1]
+        else:
+            raise ValueError("Please use only: 'NAMES' or 'INSIDE'")
 
     def report_type(self):
-        return self.user_input[2]
+        if self.user_input[2] in ['CONS', 'FILE.CSV', 'FILE.JSON']:
+            return self.user_input[2]
+        else:
+            raise ValueError("Please use only: 'CONS', 'FILE.CSV', 'FILE.JSON'")
 
     def where_to_search(self):
         return self.user_input[3]
